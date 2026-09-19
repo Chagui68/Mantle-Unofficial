@@ -15,7 +15,7 @@ import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.common.ForgeSpawnEggItem;
-import net.minecraftforge.registries.IForgeRegistry;
+import net.neoforged.neoforge.registries.IForgeRegistry;
 import slimeknights.mantle.item.BlockTooltipItem;
 import slimeknights.mantle.item.BurnableBlockItem;
 import slimeknights.mantle.item.BurnableHangingSignItem;

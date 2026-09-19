@@ -34,8 +34,8 @@ import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.common.ToolAction;
 import net.minecraftforge.common.ToolActions;
 import net.minecraftforge.entity.PartEntity;
-import net.minecraftforge.event.ForgeEventFactory;
-import net.minecraftforge.event.entity.player.CriticalHitEvent;
+import net.neoforged.neoforge.event.ForgeEventFactory;
+import net.neoforged.neoforge.event.entity.player.CriticalHitEvent;
 import slimeknights.mantle.Mantle;
 
 import javax.annotation.Nullable;

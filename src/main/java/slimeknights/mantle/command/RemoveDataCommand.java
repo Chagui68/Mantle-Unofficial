@@ -22,7 +22,7 @@ import slimeknights.mantle.util.JsonHelper;
 
 import java.nio.file.Path;
 
-import static net.minecraftforge.registries.ForgeRegistries.Keys.BIOME_MODIFIERS;
+import static net.neoforged.neoforge.registries.ForgeRegistries.Keys.BIOME_MODIFIERS;
 
 /**
  * Helpers to remove various non-recipe data.
