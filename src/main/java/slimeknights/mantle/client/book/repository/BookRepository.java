@@ -39,7 +39,8 @@ public abstract class BookRepository {
       return false;
     }
 
-    return this.resourceExists(new ResourceLocation(location));
+    ResourceLocation parsed = ResourceLocation.tryParse(location);
+    return parsed != null && this.resourceExists(parsed);
   }
 
   /** Checks if the given resource exists */

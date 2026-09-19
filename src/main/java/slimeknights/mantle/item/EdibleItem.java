@@ -23,16 +23,19 @@ public class EdibleItem extends Item {
 
   public EdibleItem(Item.Properties properties) {
     super(properties);
-    Objects.requireNonNull(foodProperties, "Must set food to make an EdibleItem");
+    Objects.requireNonNull(components().get(net.minecraft.core.component.DataComponents.FOOD), "Must set food to make an EdibleItem");
   }
 
   @Override
-  public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
+  public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flagIn) {
     TranslationHelper.addOptionalTooltip(stack, tooltip);
     // TODO: use ContainerFoodItem helper for more potion like effects?
-    for (Pair<MobEffectInstance, Float> pair : Objects.requireNonNull(stack.getItem().getFoodProperties(stack, null)).getEffects()) {
-      if (pair.getFirst() != null) {
-        tooltip.add(Component.literal(I18n.get(pair.getFirst().getDescriptionId()).trim()).withStyle(ChatFormatting.GRAY));
+    FoodProperties food = stack.get(net.minecraft.core.component.DataComponents.FOOD);
+    if (food != null) {
+      for (FoodProperties.PossibleEffect pair : food.effects()) {
+        if (pair.effect() != null) {
+          tooltip.add(Component.literal(I18n.get(pair.effect().getDescriptionId()).trim()).withStyle(ChatFormatting.GRAY));
+        }
       }
     }
   }

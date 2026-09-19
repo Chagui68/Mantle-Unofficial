@@ -9,7 +9,11 @@ import slimeknights.mantle.block.entity.MantleSignBlockEntity;
 
 public class MantleStandingSignBlock extends StandingSignBlock {
   public MantleStandingSignBlock(Properties props, WoodType type) {
-    super(props, type);
+    super(type, props);
+  }
+
+  public MantleStandingSignBlock(WoodType type, Properties props) {
+    super(type, props);
   }
 
   @Override

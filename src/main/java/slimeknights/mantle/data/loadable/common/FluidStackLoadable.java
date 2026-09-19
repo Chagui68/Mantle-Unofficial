@@ -1,6 +1,8 @@
 package slimeknights.mantle.data.loadable.common;
 
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.Fluids;
 import net.neoforged.neoforge.fluids.FluidStack;
@@ -25,8 +27,13 @@ public class FluidStackLoadable {
   /* reused lambdas */
   /** Getter for an item from a stack */
   private static final Function<FluidStack,Fluid> FLUID_GETTER = FluidStack::getFluid;
+  /** Getter for NBT tag from stack */
+  private static @Nullable CompoundTag getNbt(FluidStack stack) {
+    CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
+    return customData != null ? customData.copyTag() : null;
+  }
   /** Checks if a stack can be serialized to a primitive, ignoring count */
-  private static final Predicate<FluidStack> COMPACT_NBT = stack -> !stack.hasTag();
+  private static final Predicate<FluidStack> COMPACT_NBT = stack -> stack.get(DataComponents.CUSTOM_DATA) == null;
   /** Maps a fluid stack that may be empty to a strictly not empty one */
   private static final BiFunction<FluidStack,ErrorFactory,FluidStack> NOT_EMPTY = (stack, error) -> {
     if (stack.isEmpty()) {
@@ -41,7 +48,7 @@ public class FluidStackLoadable {
   /** Field for fluid stack count that allows empty */
   private static final LoadableField<Integer,FluidStack> AMOUNT = IntLoadable.FROM_ZERO.requiredField("amount", FluidStack::getAmount);
   /** Field for fluid stack count */
-  private static final LoadableField<CompoundTag,FluidStack> NBT = NBTLoadable.ALLOW_STRING.nullableField("nbt", FluidStack::getTag);
+  private static final LoadableField<CompoundTag,FluidStack> NBT = NBTLoadable.ALLOW_STRING.nullableField("nbt", FluidStackLoadable::getNbt);
 
 
   /* Optional */
@@ -73,7 +80,11 @@ public class FluidStackLoadable {
     if (fluid == Fluids.EMPTY || amount <= 0) {
       return FluidStack.EMPTY;
     }
-    return new FluidStack(fluid, amount, nbt);
+    FluidStack stack = new FluidStack(fluid, amount);
+    if (nbt != null) {
+      stack.set(DataComponents.CUSTOM_DATA, CustomData.of(nbt));
+    }
+    return stack;
   }
 
   /** Creates a loadable for a stack with a single item */

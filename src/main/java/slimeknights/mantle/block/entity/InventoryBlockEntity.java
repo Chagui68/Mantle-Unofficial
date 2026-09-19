@@ -3,6 +3,7 @@ package slimeknights.mantle.block.entity;
 import lombok.Getter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -192,12 +193,12 @@ public abstract class InventoryBlockEntity extends NameableBlockEntity implement
   /* NBT */
 
   @Override
-  public void load(CompoundTag tags) {
-    super.load(tags);
+  protected void loadAdditional(CompoundTag tags, HolderLookup.Provider registries) {
+    super.loadAdditional(tags, registries);
     if (saveSizeToNBT) {
       this.resizeInternal(tags.getInt(TAG_INVENTORY_SIZE));
     }
-    this.readInventoryFromNBT(tags);
+    this.readInventoryFromNBT(registries, tags);
   }
 
   @Override
@@ -210,15 +211,15 @@ public abstract class InventoryBlockEntity extends NameableBlockEntity implement
   }
   
   @Override
-  public void saveAdditional(CompoundTag tags) {
-    super.saveAdditional(tags);
-    this.writeInventoryToNBT(tags);
+  protected void saveAdditional(CompoundTag tags, HolderLookup.Provider registries) {
+    super.saveAdditional(tags, registries);
+    this.writeInventoryToNBT(registries, tags);
   }
 
   /**
    * Writes the contents of the inventory to the tag
    */
-  public void writeInventoryToNBT(CompoundTag tag) {
+  public void writeInventoryToNBT(HolderLookup.Provider registries, CompoundTag tag) {
     Container inventory = this;
     ListTag nbttaglist = new ListTag();
 
@@ -226,7 +227,7 @@ public abstract class InventoryBlockEntity extends NameableBlockEntity implement
       if (!inventory.getItem(i).isEmpty()) {
         CompoundTag itemTag = new CompoundTag();
         itemTag.putByte(TAG_SLOT, (byte) i);
-        inventory.getItem(i).save(itemTag);
+        inventory.getItem(i).save(registries, itemTag);
         nbttaglist.add(itemTag);
       }
     }
@@ -237,7 +238,7 @@ public abstract class InventoryBlockEntity extends NameableBlockEntity implement
   /**
    * Reads an inventory from the tag. Overwrites current content
    */
-  public void readInventoryFromNBT(CompoundTag tag) {
+  public void readInventoryFromNBT(HolderLookup.Provider registries, CompoundTag tag) {
     ListTag list = tag.getList(TAG_ITEMS, Tag.TAG_COMPOUND);
 
     int limit = this.getMaxStackSize();
@@ -246,12 +247,26 @@ public abstract class InventoryBlockEntity extends NameableBlockEntity implement
       CompoundTag itemTag = list.getCompound(i);
       int slot = itemTag.getByte(TAG_SLOT) & 255;
       if (slot < this.inventory.size()) {
-        stack = ItemStack.of(itemTag);
+        stack = ItemStack.parseOptional(registries, itemTag);
         if (!stack.isEmpty() && stack.getCount() > limit) {
           stack.setCount(limit);
         }
         this.inventory.set(slot, stack);
       }
+    }
+  }
+
+  @Deprecated
+  public void writeInventoryToNBT(CompoundTag tag) {
+    if (this.level != null) {
+      writeInventoryToNBT(this.level.registryAccess(), tag);
+    }
+  }
+
+  @Deprecated
+  public void readInventoryFromNBT(CompoundTag tag) {
+    if (this.level != null) {
+      readInventoryFromNBT(this.level.registryAccess(), tag);
     }
   }
 

@@ -14,9 +14,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
-import net.minecraft.world.item.Tier;
+import net.minecraft.world.item.Tiers;
 import net.minecraft.world.level.block.Block;
-import net.minecraftforge.common.TierSortingRegistry;
 import slimeknights.mantle.Mantle;
 
 import java.io.BufferedWriter;
@@ -25,16 +24,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Objects;
 
-/** Command to dump global loot modifiers */
+/** Command to dump harvest tiers */
 public class HarvestTiersCommand {
-  /** Resource location of the global loot manager "tag" */
-  protected static final ResourceLocation HARVEST_TIERS = new ResourceLocation("forge", "item_tier_ordering.json");
-  /** Path for saving the loot modifiers */
+  protected static final ResourceLocation HARVEST_TIERS = ResourceLocation.fromNamespaceAndPath("neoforge", "item_tier_ordering.json");
   private static final String HARVEST_TIER_PATH = HARVEST_TIERS.getNamespace() + "/" + HARVEST_TIERS.getPath();
 
-  // loot modifiers
   private static final Component SUCCESS_LOG = Component.translatable("command.mantle.harvest_tiers.success_log");
   private static final Component EMPTY = Component.translatable("command.mantle.tag.empty");
 
@@ -57,18 +52,16 @@ public class HarvestTiersCommand {
 
   /** Runs the command, dumping the tag */
   private static int list(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
-    List<Tier> sortedTiers = TierSortingRegistry.getSortedTiers();
+    List<Tiers> sortedTiers = List.of(Tiers.values());
 
-    // start building output message
     MutableComponent output = Component.translatable("command.mantle.harvest_tiers.success_list");
-    // if no values, print empty
     if (sortedTiers.isEmpty()) {
       output.append("\n* ").append(EMPTY);
     } else {
-      for (Tier tier : sortedTiers) {
+      for (Tiers tier : sortedTiers) {
         output.append("\n* ");
-        TagKey<Block> tag = tier.getTag();
-        ResourceLocation id = TierSortingRegistry.getName(tier);
+        TagKey<Block> tag = tier.getIncorrectBlocksForDrops();
+        String id = tier.name().toLowerCase();
         if (tag != null) {
           output.append(Component.translatable("command.mantle.harvest_tiers.tag", id, getTagComponent(tag)));
         } else {
@@ -82,19 +75,16 @@ public class HarvestTiersCommand {
 
   /** Runs the command, dumping the tag */
   private static int run(CommandContext<CommandSourceStack> context, boolean saveFile) throws CommandSyntaxException {
-    List<Tier> sortedTiers = TierSortingRegistry.getSortedTiers();
+    List<Tiers> sortedTiers = List.of(Tiers.values());
 
-    // save the list as JSON
     JsonArray entries = new JsonArray();
-    for (Tier location : sortedTiers) {
-      entries.add(Objects.requireNonNull(TierSortingRegistry.getName(location)).toString());
+    for (Tiers tier : sortedTiers) {
+      entries.add(tier.name().toLowerCase());
     }
     JsonObject json = new JsonObject();
     json.add("order", entries);
 
-    // if requested, save
     if (saveFile) {
-      // save file
       File output = new File(DumpAllTagsCommand.getOutputFile(context), HARVEST_TIER_PATH);
       Path path = output.toPath();
       try {
@@ -107,11 +97,9 @@ public class HarvestTiersCommand {
       }
       context.getSource().sendSuccess(() -> Component.translatable("command.mantle.harvest_tiers.success_save", GeneratePackHelper.getOutputComponent(output)), true);
     } else {
-      // print to console
       context.getSource().sendSuccess(() -> SUCCESS_LOG, true);
       Mantle.logger.info("Dump of harvests tiers:\n{}", DumpTagCommand.GSON.toJson(json));
     }
-    // return a number to finish
     return sortedTiers.size();
   }
 }

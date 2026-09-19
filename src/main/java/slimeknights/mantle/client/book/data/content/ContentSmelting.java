@@ -101,15 +101,18 @@ public class ContentSmelting extends PageContent {
   public void load() {
     super.load();
 
-    if (!StringUtils.isEmpty(this.recipe) && ResourceLocation.isValidResourceLocation(this.recipe)) {
-      Level level = Minecraft.getInstance().level;
-      assert level != null;
-      Recipe<?> recipe = level.getRecipeManager().byKey(new ResourceLocation(this.recipe)).orElse(null);
+    if (!StringUtils.isEmpty(this.recipe)) {
+      ResourceLocation loc = ResourceLocation.tryParse(this.recipe);
+      if (loc != null) {
+        Level level = Minecraft.getInstance().level;
+        assert level != null;
+        net.minecraft.world.item.crafting.RecipeHolder<?> recipeHolder = level.getRecipeManager().byKey(loc).orElse(null);
 
-      if (recipe instanceof AbstractCookingRecipe) {
-        this.input = IngredientData.getItemStackData(NonNullList.of(ItemStack.EMPTY, recipe.getIngredients().get(0).getItems()));
-        this.cookTime = ((AbstractCookingRecipe) recipe).getCookingTime();
-        this.result = IngredientData.getItemStackData(recipe.getResultItem(level.registryAccess()));
+        if (recipeHolder != null && recipeHolder.value() instanceof AbstractCookingRecipe recipe) {
+          this.input = IngredientData.getItemStackData(NonNullList.of(ItemStack.EMPTY, recipe.getIngredients().get(0).getItems()));
+          this.cookTime = recipe.getCookingTime();
+          this.result = IngredientData.getItemStackData(recipe.getResultItem(level.registryAccess()));
+        }
       }
     }
   }

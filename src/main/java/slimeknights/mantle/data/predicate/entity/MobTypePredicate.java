@@ -1,9 +1,11 @@
 package slimeknights.mantle.data.predicate.entity;
 
+import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.MobType;
 import slimeknights.mantle.data.loadable.record.RecordLoadable;
 import slimeknights.mantle.data.registry.NamedComponentRegistry;
+
+import java.util.function.Predicate;
 
 /** Predicate matching a specific mob type */
 public record MobTypePredicate(MobType type) implements LivingEntityPredicate {
@@ -17,11 +19,30 @@ public record MobTypePredicate(MobType type) implements LivingEntityPredicate {
 
   @Override
   public boolean matches(LivingEntity input) {
-    return input.getMobType() == type;
+    return type.test(input);
   }
 
   @Override
   public RecordLoadable<? extends LivingEntityPredicate> getLoader() {
     return LOADER;
+  }
+
+  public enum MobType implements Predicate<LivingEntity> {
+    UNDEFINED(e -> true),
+    UNDEAD(e -> e.getType().is(EntityTypeTags.UNDEAD)),
+    ARTHROPOD(e -> e.getType().is(EntityTypeTags.ARTHROPOD)),
+    ILLAGER(e -> e.getType().is(EntityTypeTags.ILLAGER)),
+    WATER(e -> e.getType().is(EntityTypeTags.AQUATIC));
+
+    private final Predicate<LivingEntity> predicate;
+
+    MobType(Predicate<LivingEntity> predicate) {
+      this.predicate = predicate;
+    }
+
+    @Override
+    public boolean test(LivingEntity entity) {
+      return this.predicate.test(entity);
+    }
   }
 }

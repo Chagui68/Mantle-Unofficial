@@ -1,25 +1,30 @@
 package slimeknights.mantle.recipe.helper;
 
-import com.google.gson.JsonObject;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
+import com.mojang.serialization.MapCodec;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 
-import java.util.function.Function;
+import java.util.function.Supplier;
 
-/** Simple implementation of a recipe serializer with no properties other than recipe ID. */
-public record SimpleRecipeSerializer<T extends Recipe<?>>(Function<ResourceLocation,T> constructor) implements RecipeSerializer<T> {
-  @Override
-  public T fromJson(ResourceLocation id, JsonObject pSerializedRecipe) {
-    return constructor.apply(id);
+/** Simple implementation of a recipe serializer with no properties. */
+public class SimpleRecipeSerializer<T extends Recipe<?>> implements RecipeSerializer<T> {
+  private final MapCodec<T> codec;
+  private final StreamCodec<RegistryFriendlyByteBuf, T> streamCodec;
+
+  public SimpleRecipeSerializer(Supplier<T> constructor) {
+    this.codec = MapCodec.unit(constructor);
+    this.streamCodec = StreamCodec.of((buf, val) -> {}, buf -> constructor.get());
   }
 
   @Override
-  public T fromNetwork(ResourceLocation id, FriendlyByteBuf pBuffer) {
-    return constructor.apply(id);
+  public MapCodec<T> codec() {
+    return this.codec;
   }
 
   @Override
-  public void toNetwork(FriendlyByteBuf pBuffer, T pRecipe) {}
+  public StreamCodec<RegistryFriendlyByteBuf, T> streamCodec() {
+    return this.streamCodec;
+  }
 }

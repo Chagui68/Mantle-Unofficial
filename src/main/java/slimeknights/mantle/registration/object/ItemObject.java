@@ -39,8 +39,9 @@ public class ItemObject<I extends ItemLike> implements Supplier<I>, ItemLike, Id
    * Creates a new item object using the given registry object. This variant can resolve its name before the registry object entry resolves
    * @param object  Object base
    */
-  public ItemObject(DeferredHolder<Object, ? extends I> object) {
-    this.entry = object;
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  public ItemObject(DeferredHolder object) {
+    this.entry = (Supplier<? extends I>) object;
     this.id = object.getId();
   }
 

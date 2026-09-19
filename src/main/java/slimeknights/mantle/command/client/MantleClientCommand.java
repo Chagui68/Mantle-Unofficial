@@ -15,6 +15,10 @@ import net.neoforged.neoforge.common.NeoForge;
 import slimeknights.mantle.Mantle;
 import slimeknights.mantle.client.book.BookLoader;
 
+import java.lang.reflect.Field;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 /**
@@ -39,7 +43,7 @@ public class MantleClientCommand {
     // source command suggestions
     FileToIdConverter atlases = new FileToIdConverter("textures/atlas", ".png");
     ClientSourcesCommand.registerMinecraft("atlases", (context, builder)
-      -> SharedSuggestionProvider.suggestResource(Minecraft.getInstance().getModelManager().atlases.atlases.keySet().stream().map(atlases::fileToId), builder));
+      -> SharedSuggestionProvider.suggestResource(getAtlasIds(atlases), builder));
     ClientSourcesCommand.registerMinecraft("blockstates", (context, builder)
       -> SharedSuggestionProvider.suggestResource(BuiltInRegistries.BLOCK.keySet(), builder));
     ClientSourcesCommand.register("item_models", "models/item", ".json", (context, builder)
@@ -70,5 +74,20 @@ public class MantleClientCommand {
 
     // register final command
     event.getDispatcher().register(builder);
+  }
+
+  @SuppressWarnings("unchecked")
+  private static Collection<ResourceLocation> getAtlasIds(FileToIdConverter converter) {
+    try {
+      Field f1 = net.minecraft.client.resources.model.ModelManager.class.getDeclaredField("atlases");
+      f1.setAccessible(true);
+      Object atlasSet = f1.get(Minecraft.getInstance().getModelManager());
+      Field f2 = net.minecraft.client.resources.model.AtlasSet.class.getDeclaredField("atlases");
+      f2.setAccessible(true);
+      Map<ResourceLocation, ?> map = (Map<ResourceLocation, ?>) f2.get(atlasSet);
+      return map.keySet().stream().map(converter::fileToId).toList();
+    } catch (Throwable t) {
+      return List.of();
+    }
   }
 }

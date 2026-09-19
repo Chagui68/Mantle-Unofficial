@@ -26,6 +26,7 @@ import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.gameevent.GameEvent.Context;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate.StructureBlockInfo;
 import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.saveddata.maps.MapId;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.Scoreboard;
@@ -45,9 +46,9 @@ import java.util.function.Predicate;
  */
 public class TemplateLevel extends Level {
 
-  private final Map<String, MapItemSavedData> maps = new HashMap<>();
+  private final Map<MapId, MapItemSavedData> maps = new HashMap<>();
   private final Scoreboard scoreboard = new Scoreboard();
-  private final RecipeManager recipeManager = new RecipeManager();
+  private final RecipeManager recipeManager;
   private final TemplateChunkSource chunkSource;
 
   public TemplateLevel(List<StructureBlockInfo> blocks, Predicate<BlockPos> shouldShow) {
@@ -57,6 +58,7 @@ public class TemplateLevel extends Level {
       () -> InactiveProfiler.INSTANCE, true, false, 0, 0
     );
 
+    this.recipeManager = new RecipeManager(Objects.requireNonNull(Minecraft.getInstance().level).registryAccess());
     this.chunkSource = new TemplateChunkSource(blocks, this, shouldShow);
   }
 
@@ -82,19 +84,22 @@ public class TemplateLevel extends Level {
 
   @Nullable
   @Override
-  public MapItemSavedData getMapData(@Nonnull String mapName) {
-    return this.maps.get(mapName);
+  public MapItemSavedData getMapData(MapId mapId) {
+    return this.maps.get(mapId);
   }
 
   @Override
-  public void setMapData(String mapId, MapItemSavedData mapDataIn) {
+  public void setMapData(MapId mapId, MapItemSavedData mapDataIn) {
     this.maps.put(mapId, mapDataIn);
   }
 
   @Override
-  public int getFreeMapId() {
-    return this.maps.size();
+  public MapId getFreeMapId() {
+    return new MapId(this.maps.size());
   }
+
+  @Override
+  public void setDayTimePerTick(float dayTimePerTick) {}
 
   @Override
   public void destroyBlockProgress(int breakerId, @Nonnull BlockPos pos, int progress) {}
@@ -138,7 +143,7 @@ public class TemplateLevel extends Level {
   public void levelEvent(@Nullable Player player, int type, @Nonnull BlockPos pos, int data) {}
 
   @Override
-  public void gameEvent(GameEvent pEvent, Vec3 pPosition, Context pContext) {}
+  public void gameEvent(Holder<GameEvent> pEvent, Vec3 pPosition, Context pContext) {}
 
   @Override
   public FeatureFlagSet enabledFeatures() {
@@ -160,5 +165,28 @@ public class TemplateLevel extends Level {
   @Override
   public Holder<Biome> getUncachedNoiseBiome(int x, int y, int z) {
     return registryAccess().registryOrThrow(Registries.BIOME).getHolderOrThrow(Biomes.PLAINS);
+  }
+
+  @Override
+  public float getDayTimePerTick() {
+    return 1.0F;
+  }
+
+  @Override
+  public float getDayTimeFraction() {
+    return 0.0F;
+  }
+
+  @Override
+  public void setDayTimeFraction(float fraction) {}
+
+  @Override
+  public net.minecraft.world.item.alchemy.PotionBrewing potionBrewing() {
+    return net.minecraft.world.item.alchemy.PotionBrewing.EMPTY;
+  }
+
+  @Override
+  public net.minecraft.world.TickRateManager tickRateManager() {
+    return new net.minecraft.world.TickRateManager();
   }
 }

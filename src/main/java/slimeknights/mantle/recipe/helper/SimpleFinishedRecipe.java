@@ -1,26 +1,12 @@
 package slimeknights.mantle.recipe.helper;
 
-import com.google.gson.JsonObject;
-import net.minecraft.data.recipes.FinishedRecipe;
+import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.item.crafting.Recipe;
 
-import javax.annotation.Nullable;
-
-/** Finished recipe implementation for {@link SimpleRecipeSerializer}, use like {@code consumer.accept(new SimpleFinishedRecipe(...))} */
-public record SimpleFinishedRecipe(ResourceLocation getId, RecipeSerializer<?> getType) implements FinishedRecipe {
-  @Override
-  public void serializeRecipeData(JsonObject pJson) {}
-
-  @Nullable
-  @Override
-  public JsonObject serializeAdvancement() {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public ResourceLocation getAdvancementId() {
-    return null;
+/** Helper record to save simple recipes to {@link RecipeOutput}. */
+public record SimpleFinishedRecipe(ResourceLocation id, Recipe<?> recipe) {
+  public void save(RecipeOutput output) {
+    output.accept(id, recipe, null);
   }
 }

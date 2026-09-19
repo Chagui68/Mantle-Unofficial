@@ -140,8 +140,16 @@ public abstract class ItemOutput implements Supplier<ItemStack> {
    * Writes this output to the packet buffer
    * @param buffer  Packet buffer instance
    */
+  public void write(net.minecraft.network.RegistryFriendlyByteBuf buffer) {
+    ItemStack.OPTIONAL_STREAM_CODEC.encode(buffer, get());
+  }
+
   public void write(FriendlyByteBuf buffer) {
-    buffer.writeItem(get());
+    if (buffer instanceof net.minecraft.network.RegistryFriendlyByteBuf reg) {
+      write(reg);
+    } else {
+      write(new net.minecraft.network.RegistryFriendlyByteBuf(buffer, net.minecraft.core.RegistryAccess.EMPTY));
+    }
   }
 
   /**
@@ -149,8 +157,16 @@ public abstract class ItemOutput implements Supplier<ItemStack> {
    * @param buffer  Buffer instance
    * @return  Item output
    */
+  public static ItemOutput read(net.minecraft.network.RegistryFriendlyByteBuf buffer) {
+    return fromStack(ItemStack.OPTIONAL_STREAM_CODEC.decode(buffer));
+  }
+
   public static ItemOutput read(FriendlyByteBuf buffer) {
-    return fromStack(buffer.readItem());
+    if (buffer instanceof net.minecraft.network.RegistryFriendlyByteBuf reg) {
+      return read(reg);
+    } else {
+      return read(new net.minecraft.network.RegistryFriendlyByteBuf(buffer, net.minecraft.core.RegistryAccess.EMPTY));
+    }
   }
 
   /** Class for an output that is just an item, simplifies NBT for serializing as vanilla forces NBT to be set for tools and forge goes through extra steps when NBT is set */
@@ -232,7 +248,7 @@ public abstract class ItemOutput implements Supplier<ItemStack> {
         }
         cachedResult = new ItemStack(preference.orElseThrow(), count);
         if (nbt != null) {
-          cachedResult.setTag(nbt.copy());
+          cachedResult.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.of(nbt.copy()));
         }
       }
       return cachedResult;

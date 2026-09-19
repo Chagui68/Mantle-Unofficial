@@ -39,14 +39,32 @@ public record LootTableInjection(ResourceLocation name, List<LootPoolInjection> 
       this(name, entries.toArray(new LootPoolEntryContainer[0]));
     }
 
+    private static final java.lang.reflect.Field ENTRIES_FIELD;
+    static {
+      java.lang.reflect.Field f = null;
+      try {
+        f = LootPool.class.getDeclaredField("entries");
+        f.setAccessible(true);
+      } catch (Exception e) {
+        Mantle.logger.error("Failed to find LootPool.entries field", e);
+      }
+      ENTRIES_FIELD = f;
+    }
+
     /** Injects this into the given loot pool */
+    @SuppressWarnings("unchecked")
     public void inject(LootTable table) {
       LootPool pool = table.getPool(name);
       //noinspection ConstantConditions method is annotated wrongly
-      if (pool != null) {
-        int oldLength = pool.entries.length;
-        pool.entries = Arrays.copyOf(pool.entries, oldLength + entries.length);
-        System.arraycopy(entries, 0, pool.entries, oldLength, entries.length);
+      if (pool != null && ENTRIES_FIELD != null) {
+        try {
+          List<LootPoolEntryContainer> current = (List<LootPoolEntryContainer>) ENTRIES_FIELD.get(pool);
+          List<LootPoolEntryContainer> newEntries = new ArrayList<>(current);
+          Collections.addAll(newEntries, entries);
+          ENTRIES_FIELD.set(pool, newEntries);
+        } catch (Exception e) {
+          Mantle.logger.error("Failed to inject loot into {} pool {}", table.getLootTableId(), name, e);
+        }
       } else {
         Mantle.logger.warn("Failed to inject loot into {} pool {}", table.getLootTableId(), name);
       }

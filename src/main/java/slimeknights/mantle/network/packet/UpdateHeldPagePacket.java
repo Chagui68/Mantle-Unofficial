@@ -2,10 +2,11 @@ package slimeknights.mantle.network.packet;
 
 import lombok.RequiredArgsConstructor;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.network.NetworkEvent.Context;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 import slimeknights.mantle.client.book.BookHelper;
 
 /**
@@ -27,8 +28,8 @@ public class UpdateHeldPagePacket implements IThreadsafePacket {
   }
 
   @Override
-  public void handleThreadsafe(Context context) {
-    Player player = context.getSender();
+  public void handleThreadsafe(IPayloadContext context) {
+    Player player = (context.player() instanceof ServerPlayer sp ? sp : null);
     if (player != null && this.page != null) {
       ItemStack stack = player.getItemInHand(hand);
       if (!stack.isEmpty()) {

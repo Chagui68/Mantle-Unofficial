@@ -56,14 +56,27 @@ public class ContentStructure extends PageContent {
     }
 
     try {
-      CompoundTag compoundnbt = NbtIo.readCompressed(resource.open());
+      CompoundTag compoundnbt = NbtIo.readCompressed(resource.open(), net.minecraft.nbt.NbtAccounter.unlimitedHeap());
       this.template.load(BuiltInRegistries.BLOCK.asLookup(), compoundnbt);
     } catch (IOException e) {
       e.printStackTrace();
       return;
     }
 
-    this.templateBlocks = this.template.palettes.get(0).blocks();
+    try {
+      java.lang.reflect.Field field = StructureTemplate.class.getDeclaredField("palettes");
+      field.setAccessible(true);
+      List<?> palettes = (List<?>) field.get(this.template);
+      if (!palettes.isEmpty()) {
+        java.lang.reflect.Method blocksMethod = palettes.get(0).getClass().getMethod("blocks");
+        this.templateBlocks = new ArrayList<>((List<StructureTemplate.StructureBlockInfo>) blocksMethod.invoke(palettes.get(0)));
+      } else {
+        this.templateBlocks = new ArrayList<>();
+      }
+    } catch (ReflectiveOperationException e) {
+      Mantle.logger.error("Failed to read blocks from structure template", e);
+      this.templateBlocks = new ArrayList<>();
+    }
 
     for (int i = 0; i < this.templateBlocks.size(); i++) {
       StructureTemplate.StructureBlockInfo info = this.templateBlocks.get(i);

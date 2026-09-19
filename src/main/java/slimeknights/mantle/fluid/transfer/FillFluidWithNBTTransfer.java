@@ -21,8 +21,9 @@ public class FillFluidWithNBTTransfer extends FillFluidContainerTransfer {
   @Override
   protected ItemStack getFilled(FluidStack drained) {
     ItemStack filled = super.getFilled(drained);
-    if (drained.hasTag()) {
-      filled.setTag(drained.getTag().copy());
+    net.minecraft.world.item.component.CustomData customData = drained.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
+    if (customData != null) {
+      filled.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA, customData);
     }
     return filled;
   }

@@ -9,6 +9,7 @@ import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipPositione
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
@@ -22,11 +23,14 @@ import java.util.stream.Stream;
 public abstract class BookElement {
 
   /** TODO 1.21: make this field protected instead of public to ensure setter is used. */
-  @Setter
   public BookScreen parent;
 
+  public void setParent(BookScreen parent) {
+    this.parent = parent;
+  }
+
   protected Minecraft mc = Minecraft.getInstance();
-  protected TextureManager renderEngine = this.mc.textureManager;
+  protected TextureManager renderEngine = this.mc.getTextureManager();
 
   public int x, y;
 
@@ -53,7 +57,8 @@ public abstract class BookElement {
   }
 
   public void renderToolTip(GuiGraphics graphics, Font fontRenderer, ItemStack stack, int x, int y) {
-    List<Component> list = stack.getTooltipLines(this.mc.player, this.mc.options.advancedItemTooltips ? TooltipFlag.Default.ADVANCED : TooltipFlag.Default.NORMAL);
+    Item.TooltipContext context = this.mc.level != null ? Item.TooltipContext.of(this.mc.level) : Item.TooltipContext.EMPTY;
+    List<Component> list = stack.getTooltipLines(context, this.mc.player, this.mc.options.advancedItemTooltips ? TooltipFlag.Default.ADVANCED : TooltipFlag.Default.NORMAL);
 
     Font font = IClientItemExtensions.of(stack).getFont(stack, FontContext.TOOLTIP);
     if (font == null) {
@@ -112,14 +117,14 @@ public abstract class BookElement {
       }
     }
 
-    // map to client tooltips, wrapping if needed
+    // map to FormattedCharSequence, wrapping if needed
     int tooltipTextWidthF = tooltipTextWidth;
-    List<ClientTooltipComponent> components = needsWrap
-      ? textLines.stream().flatMap(text -> splitLine(text, font, tooltipTextWidthF)).toList()
-      : textLines.stream().map(text -> ClientTooltipComponent.create(text.getVisualOrderText())).toList();
+    List<net.minecraft.util.FormattedCharSequence> lines = needsWrap
+      ? textLines.stream().flatMap(text -> font.split(text, tooltipTextWidthF).stream()).toList()
+      : textLines.stream().map(Component::getVisualOrderText).toList();
 
     // render the tooltip
-    graphics.renderTooltipInternal(font, components, mouseX, mouseY, POSITIONER);
+    graphics.renderTooltip(font, lines, POSITIONER, mouseX, mouseY);
   }
 
   /**

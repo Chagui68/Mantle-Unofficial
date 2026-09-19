@@ -9,7 +9,6 @@ import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.level.Level;
-import net.neoforged.neoforge.common.crafting.IShapedRecipe;
 import org.apache.commons.lang3.StringUtils;
 import slimeknights.mantle.Mantle;
 import slimeknights.mantle.client.book.data.BookData;
@@ -112,12 +111,13 @@ public class ContentCrafting extends PageContent {
   public void load() {
     super.load();
 
-    if (!StringUtils.isEmpty(recipe) && ResourceLocation.isValidResourceLocation(recipe)) {
+    if (!StringUtils.isEmpty(recipe) && ResourceLocation.tryParse(recipe) != null) {
       int w = 0, h = 0;
 
       Level level = Minecraft.getInstance().level;
       assert level != null;
-      Recipe<?> recipe = level.getRecipeManager().byKey(new ResourceLocation(this.recipe)).orElse(null);
+      var holder = level.getRecipeManager().byKey(ResourceLocation.parse(this.recipe)).orElse(null);
+      Recipe<?> recipe = holder != null ? holder.value() : null;
       if (recipe instanceof CraftingRecipe) {
         if(grid_size.equalsIgnoreCase("auto")) {
           if(recipe.canCraftInDimensions(2, 2)) {
@@ -140,8 +140,8 @@ public class ContentCrafting extends PageContent {
 
         NonNullList<Ingredient> ingredients = recipe.getIngredients();
 
-        if (recipe instanceof IShapedRecipe<?> shaped) {
-          grid = new IngredientData[shaped.getRecipeHeight()][shaped.getRecipeWidth()];
+        if (recipe instanceof net.minecraft.world.item.crafting.ShapedRecipe shaped) {
+          grid = new IngredientData[shaped.getHeight()][shaped.getWidth()];
 
           for (int y = 0; y < grid.length; y++) {
             for (int x = 0; x < grid[y].length; x++) {

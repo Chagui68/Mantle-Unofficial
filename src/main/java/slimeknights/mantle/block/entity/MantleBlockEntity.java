@@ -1,6 +1,7 @@
 package slimeknights.mantle.block.entity;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.level.block.Block;
@@ -37,7 +38,7 @@ public class MantleBlockEntity extends BlockEntity {
   /* Syncing */
 
   /**
-   * If true, this TE syncs when {@link net.minecraft.world.level.Level#blockUpdated(BlockPos, Block) is called
+   * If true, this TE syncs when {@link net.minecraft.world.level.Level#blockUpdated(BlockPos, Block)} is called
    * Syncs data from {@link #saveSynced(CompoundTag)}
    */
   protected boolean shouldSyncOnUpdate() {
@@ -52,21 +53,30 @@ public class MantleBlockEntity extends BlockEntity {
   }
 
   /**
-   * Write to NBT that is synced to the client in {@link #getUpdateTag()} and in {@link #saveAdditional(CompoundTag)}
+   * Write to NBT that is synced to the client in {@link #getUpdateTag(HolderLookup.Provider)} and in {@link #saveAdditional(CompoundTag, HolderLookup.Provider)}
    * @param nbt  NBT
    */
   protected void saveSynced(CompoundTag nbt) {}
 
-  @Override
-  public CompoundTag getUpdateTag() {
-    CompoundTag nbt = new CompoundTag();
+  /**
+   * Write to NBT that is synced to the client in {@link #getUpdateTag(HolderLookup.Provider)} and in {@link #saveAdditional(CompoundTag, HolderLookup.Provider)}
+   * @param nbt         NBT
+   * @param registries  Registry provider
+   */
+  protected void saveSynced(CompoundTag nbt, HolderLookup.Provider registries) {
     saveSynced(nbt);
+  }
+
+  @Override
+  public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
+    CompoundTag nbt = new CompoundTag();
+    saveSynced(nbt, registries);
     return nbt;
   }
 
   @Override
-  public void saveAdditional(CompoundTag nbt) {
-    super.saveAdditional(nbt);
-    saveSynced(nbt);
+  protected void saveAdditional(CompoundTag nbt, HolderLookup.Provider registries) {
+    super.saveAdditional(nbt, registries);
+    saveSynced(nbt, registries);
   }
 }

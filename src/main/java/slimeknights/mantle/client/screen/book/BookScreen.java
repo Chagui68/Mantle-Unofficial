@@ -3,6 +3,8 @@ package slimeknights.mantle.client.screen.book;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.advancements.Advancement;
+import net.minecraft.advancements.AdvancementHolder;
+import net.minecraft.advancements.AdvancementNode;
 import net.minecraft.advancements.AdvancementProgress;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -112,11 +114,29 @@ public class BookScreen extends Screen {
     this.openPage(book.findPageNumber(page, this.advancementCache));
   }
 
+  private static net.minecraft.client.gui.font.FontSet getFontSet(ResourceLocation location) {
+    try {
+      java.lang.reflect.Field fmField = Minecraft.class.getDeclaredField("fontManager");
+      fmField.setAccessible(true);
+      FontManager fontManager = (FontManager) fmField.get(Minecraft.getInstance());
+      java.lang.reflect.Field field = FontManager.class.getDeclaredField("fontSets");
+      field.setAccessible(true);
+      @SuppressWarnings("unchecked")
+      java.util.Map<ResourceLocation, net.minecraft.client.gui.font.FontSet> map = (java.util.Map<ResourceLocation, net.minecraft.client.gui.font.FontSet>) field.get(fontManager);
+      if (map != null) {
+        net.minecraft.client.gui.font.FontSet set = map.get(location);
+        if (set != null) {
+          return set;
+        }
+      }
+    } catch (Exception ignored) {}
+    return null;
+  }
+
   /** Gets the alt Minecraft font */
   public static Font getAltFont() {
     if (altFont == null) {
-      FontManager resourceManager = Minecraft.getInstance().fontManager;
-      altFont = new Font(rl -> resourceManager.fontSets.get(Minecraft.ALT_FONT), false);
+      altFont = new Font(BookScreen::getFontSet, false);
     }
     return altFont;
   }
@@ -124,8 +144,7 @@ public class BookScreen extends Screen {
   /** Gets the uniform version of the Minecraft font */
   public static Font getUniformFont() {
     if (uniformFont == null) {
-      FontManager resourceManager = Minecraft.getInstance().fontManager;
-      uniformFont = new Font(rl -> resourceManager.fontSets.get(Minecraft.UNIFORM_FONT), false);
+      uniformFont = new Font(BookScreen::getFontSet, false);
     }
     return uniformFont;
   }
@@ -467,16 +486,16 @@ public class BookScreen extends Screen {
   }
 
   @Override
-  public boolean mouseScrolled(double unKnown1, double unKnown2, double scrollDelta) {
-    if (scrollDelta < 0.0D) {
+  public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+    if (scrollY < 0.0D) {
       nextPage();
       return true;
-    } else if (scrollDelta > 0.0D) {
+    } else if (scrollY > 0.0D) {
       previousPage();
       return true;
     }
 
-    return super.mouseScrolled(scrollDelta, unKnown1, unKnown2);
+    return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
   }
 
   @Override
@@ -791,54 +810,56 @@ public class BookScreen extends Screen {
   }
 
   public static class AdvancementCache implements ClientAdvancements.Listener {
-
-    private final HashMap<Advancement, AdvancementProgress> progress = new HashMap<>();
-    private final HashMap<ResourceLocation, Advancement> nameCache = new HashMap<>();
+    private final HashMap<ResourceLocation, AdvancementProgress> progress = new HashMap<>();
+    private final HashMap<ResourceLocation, AdvancementHolder> nameCache = new HashMap<>();
 
     @Nullable
     public AdvancementProgress getProgress(String id) {
-      return this.getProgress(this.getAdvancement(id));
+      ResourceLocation loc = ResourceLocation.tryParse(id);
+      return loc != null ? this.progress.get(loc) : null;
     }
 
     @Nullable
-    public AdvancementProgress getProgress(Advancement advancement) {
-      return this.progress.get(advancement);
+    public AdvancementProgress getProgress(AdvancementHolder advancement) {
+      return this.progress.get(advancement.id());
     }
 
-    public Advancement getAdvancement(String id) {
-      return this.nameCache.get(new ResourceLocation(id));
-    }
-
-    @Override
-    public void onUpdateAdvancementProgress(Advancement advancement, AdvancementProgress advancementProgress) {
-      this.progress.put(advancement, advancementProgress);
+    @Nullable
+    public AdvancementHolder getAdvancement(String id) {
+      ResourceLocation loc = ResourceLocation.tryParse(id);
+      return loc != null ? this.nameCache.get(loc) : null;
     }
 
     @Override
-    public void onSelectedTabChanged(@Nullable Advancement advancement) {
+    public void onUpdateAdvancementProgress(AdvancementNode advancementNode, AdvancementProgress advancementProgress) {
+      this.progress.put(advancementNode.holder().id(), advancementProgress);
+    }
+
+    @Override
+    public void onSelectedTabChanged(@Nullable AdvancementHolder advancement) {
       // noop
     }
 
     @Override
-    public void onAddAdvancementRoot(Advancement advancement) {
-      this.nameCache.put(advancement.getId(), advancement);
+    public void onAddAdvancementRoot(AdvancementNode advancementNode) {
+      this.nameCache.put(advancementNode.holder().id(), advancementNode.holder());
     }
 
     @Override
-    public void onRemoveAdvancementRoot(Advancement advancement) {
-      this.progress.remove(advancement);
-      this.nameCache.remove(advancement.getId());
+    public void onRemoveAdvancementRoot(AdvancementNode advancementNode) {
+      this.progress.remove(advancementNode.holder().id());
+      this.nameCache.remove(advancementNode.holder().id());
     }
 
     @Override
-    public void onAddAdvancementTask(Advancement advancement) {
-      this.nameCache.put(advancement.getId(), advancement);
+    public void onAddAdvancementTask(AdvancementNode advancementNode) {
+      this.nameCache.put(advancementNode.holder().id(), advancementNode.holder());
     }
 
     @Override
-    public void onRemoveAdvancementTask(Advancement advancement) {
-      this.progress.remove(advancement);
-      this.nameCache.remove(advancement.getId());
+    public void onRemoveAdvancementTask(AdvancementNode advancementNode) {
+      this.progress.remove(advancementNode.holder().id());
+      this.nameCache.remove(advancementNode.holder().id());
     }
 
     @Override
