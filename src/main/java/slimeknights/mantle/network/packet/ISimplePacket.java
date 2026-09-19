@@ -1,12 +1,10 @@
 package slimeknights.mantle.network.packet;
 
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.network.NetworkEvent;
-
-import java.util.function.Supplier;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /**
- * Packet interface to add common methods for registration
+ * Packet interface to add common methods for registration in NeoForge
  */
 public interface ISimplePacket {
   /**
@@ -19,5 +17,5 @@ public interface ISimplePacket {
    * Handles receiving the packet
    * @param context  Packet context
    */
-  void handle(Supplier<NetworkEvent.Context> context);
+  void handle(IPayloadContext context);
 }

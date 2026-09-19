@@ -10,8 +10,8 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.material.Fluid;
-import net.neoforged.neoforge.common.crafting.conditions.ICondition;
-import net.neoforged.neoforge.registries.RegistryObject;
+import net.neoforged.neoforge.common.conditions.ICondition;
+import net.neoforged.neoforge.registries.DeferredHolder;
 import slimeknights.mantle.Mantle;
 import slimeknights.mantle.recipe.condition.TagFilledCondition;
 import slimeknights.mantle.registration.object.IdAwareObject;
@@ -95,7 +95,7 @@ public interface IRecipeHelper {
    * @param suffix    Path suffix
    * @return  Location with the given prefix and suffix
    */
-  default ResourceLocation wrap(RegistryObject<?> location, String prefix, String suffix) {
+  default ResourceLocation wrap(DeferredHolder<Object, ?> location, String prefix, String suffix) {
     return wrap(location.getId(), prefix, suffix);
   }
 
@@ -105,7 +105,7 @@ public interface IRecipeHelper {
    * @param prefix    Path prefix
    * @return  Location with the given prefix
    */
-  default ResourceLocation prefix(RegistryObject<?> location, String prefix) {
+  default ResourceLocation prefix(DeferredHolder<Object, ?> location, String prefix) {
     return prefix(location.getId(), prefix);
   }
 
@@ -115,7 +115,7 @@ public interface IRecipeHelper {
    * @param suffix    Path suffix
    * @return  Location with the given suffix
    */
-  default ResourceLocation suffix(RegistryObject<?> location, String suffix) {
+  default ResourceLocation suffix(DeferredHolder<Object, ?> location, String suffix) {
     return suffix(location.getId(), suffix);
   }
 
