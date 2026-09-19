@@ -92,6 +92,7 @@ neoForge {
 }
 
 tasks.named('processResources', ProcessResources).configure {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     var replaceProperties = [
         'version': artifact_version,
         'minecraft_range': minecraft_range,
@@ -105,6 +106,9 @@ tasks.named('processResources', ProcessResources).configure {
 }
 
 tasks.named('jar', Jar).configure {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    exclude '.cache/**'
+    exclude '**/*.md'
     manifest {
         attributes([
                 "Specification-Title"     : "Mantle",
