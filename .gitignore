@@ -29,3 +29,7 @@ version.properties
 /.settings/
 /*.launch
 /out
+# Claude build helpers
+cc-*
+.sc_active_version
+versions/*/build/
