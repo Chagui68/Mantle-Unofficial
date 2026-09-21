@@ -33,3 +33,4 @@ version.properties
 cc-*
 .sc_active_version
 versions/*/build/
+versions/*/run/
