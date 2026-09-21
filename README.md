@@ -11,7 +11,7 @@ endorsed by Slime Knights.
 > **Status: working.** The mod compiles, builds a jar, and loads — data generation runs to
 > completion against NeoForge 21.1.77. See [Port status](../../wiki/Port-Status).
 
-📖 **Wiki:** [English](../../wiki) · [Español](../../wiki/es-Inicio)
+📖 **Wiki:** [English](../../wiki) · [Español](../../wiki/Inicio)
 
 ---
 
