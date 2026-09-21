@@ -5,7 +5,7 @@ plugins {
     id("eclipse")
     id("idea")
     id("maven-publish")
-    id("net.neoforged.moddev")
+    id("net.minecraftforge.gradle")
 }
 
 val mcVersion: String = stonecutter.current.version
@@ -15,7 +15,7 @@ repositories {
     mavenCentral()
     maven("https://dvs1.progwml6.com/files/maven") { name = "Prog's Maven" }
     maven("https://maven.blamejared.com/") { name = "Jared's maven" }
-    maven("https://maven.neoforged.net/releases") { name = "NeoForged" }
+    maven("https://maven.minecraftforge.net/") { name = "MinecraftForge" }
 }
 
 group = "slimeknights.mantle"
@@ -23,15 +23,18 @@ base.archivesName = "Mantle"
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
-dependencies {
-    compileOnly("org.projectlombok:lombok:1.18.34")
-    annotationProcessor("org.projectlombok:lombok:1.18.34")
-    testCompileOnly("org.projectlombok:lombok:1.18.34")
-    testAnnotationProcessor("org.projectlombok:lombok:1.18.34")
-    findProperty("deps.jei")?.let { compileOnly("mezz.jei:jei-$mcVersion-neoforge-api:$it") }
+minecraft {
+    mappings("official", mcVersion)
+    val at = rootProject.file("src/main/resources/META-INF/accesstransformer.cfg")
+    if (at.exists()) accessTransformer(at)
 }
 
-// Lombok needs these opens on JDK 21.
+dependencies {
+    "minecraft"("net.minecraftforge:forge:$mcVersion-${property("deps.forge")}")
+    compileOnly("org.projectlombok:lombok:1.18.34")
+    annotationProcessor("org.projectlombok:lombok:1.18.34")
+}
+
 tasks.withType<JavaCompile>().configureEach {
     options.encoding = "UTF-8"
     options.isFork = true
@@ -49,7 +52,6 @@ tasks.withType<JavaCompile>().configureEach {
     ).map { "--add-opens=$it=ALL-UNNAMED" }
 }
 
-// ---- version metadata ----
 fun gitRevision(): String = try {
     providers.exec {
         commandLine("git", "rev-parse", "--short", "HEAD")
@@ -61,52 +63,22 @@ val buildNum: String = System.getenv("BUILD_NUMBER") ?: "DEV.${gitRevision()}"
 val artifactVersion: String = System.getenv("ARTIFACT_VERSION") ?: "${property("mod_version")}.$buildNum"
 version = "$mcVersion-$artifactVersion"
 
-println("Mantle | MC $mcVersion | loader $loader | version $version | JVM ${System.getProperty("java.version")}")
+println("Mantle | MC $mcVersion | loader $loader | version $version")
 
-neoForge {
-    version = property("deps.neoforge") as String
-
-    // Mantle's access transformer. Required for the GUI/model internals it touches.
-    val at = rootProject.file("src/main/resources/META-INF/accesstransformer.cfg")
-    if (at.exists()) {
-        accessTransformers.from(at)
-        validateAccessTransformers = true
-    }
-
-    runs {
-        register("client") { client() }
-        register("server") { server() }
-        register("data") {
-            data()
-            programArguments.addAll(
-                "--mod", "mantle", "--all",
-                "--output", rootProject.file("src/generated/resources/").absolutePath,
-                "--existing", rootProject.file("src/main/resources/").absolutePath
-            )
-        }
-    }
-
-    mods {
-        register("mantle") { sourceSet(sourceSets["main"]) }
-    }
-}
-
-tasks.named("createMinecraftArtifacts") {
+tasks.named("compileJava") {
     dependsOn(tasks.named("stonecutterGenerate"))
 }
 
-// Resolved eagerly against the project: inside a task configuration block the
-// receiver is the task, so property() would not see project properties.
-val modsTomlProperties: Map<String, Any> = mapOf(
-    "version" to artifactVersion,
-    "minecraft_range" to project.property("minecraft_range").toString(),
-    "neo_version_range" to project.property("neo_version_range").toString()
-)
-
 tasks.named<ProcessResources>("processResources") {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    inputs.properties(modsTomlProperties)
-    filesMatching(listOf("META-INF/neoforge.mods.toml")) { expand(modsTomlProperties) }
+    val replaceProperties = mapOf(
+        "version" to artifactVersion,
+        "minecraft_range" to property("minecraft_range"),
+        "forge_range" to property("forge_range"),
+        "loader_range" to property("loader_range")
+    )
+    inputs.properties(replaceProperties)
+    filesMatching(listOf("META-INF/mods.toml")) { expand(replaceProperties) }
 }
 
 tasks.named<Jar>("jar") {
@@ -126,16 +98,9 @@ tasks.named<Jar>("jar") {
     }
 }
 
-java { withSourcesJar() }
-
-publishing {
-    publications {
-        register<MavenPublication>("mavenJava") { from(components["java"]) }
-    }
-}
-
-// Datagen output lives at the repository root, shared across version nodes.
 sourceSets.named("main") {
     resources.srcDir(rootProject.file("src/generated/resources"))
     resources.exclude(".cache")
 }
+
+java { withSourcesJar() }

@@ -1,5 +1,6 @@
 modLoader="javafml"
-loaderVersion="${neo_version_range}"
+# javafml language provider version, not the NeoForge version.
+loaderVersion="[4,)"
 issueTrackerURL="https://github.com/SlimeKnights/Mantle/issues"
 license="MIT"
 
