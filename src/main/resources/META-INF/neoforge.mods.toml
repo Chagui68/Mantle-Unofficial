@@ -2,13 +2,13 @@ modLoader="javafml"
 # javafml language provider version, not the NeoForge version.
 loaderVersion="[4,)"
 issueTrackerURL="https://github.com/SlimeKnights/Mantle/issues"
-license="MIT"
+license="GPL-3.0-only"
 
 [[mods]]
     modId="mantle"
-    version="${version}"
+    version="1.0.0 - 1.21.1"
     displayName="Mantle"
-    authors="Slime Knights"
+    authors="Chagui68"
     logoFile="Mantle.png"
     displayURL="https://minecraft.curseforge.com/projects/mantle"
     description='''
