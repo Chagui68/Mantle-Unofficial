@@ -1,0 +1,118 @@
+name: Publish Mantle to Modrinth
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: Mod version, without the leading v (for example 1.12.0)
+        required: true
+        type: string
+      channel:
+        description: Modrinth release channel
+        required: true
+        default: alpha
+        type: choice
+        options: [alpha, beta, release]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mantle-modrinth-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.event_name != 'release' || github.event.release.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Modrinth configuration
+        env:
+          MODRINTH_PROJECT_ID: ${{ vars.MODRINTH_PROJECT_ID }}
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+        run: |
+          set -euo pipefail
+          [[ -n "$MODRINTH_PROJECT_ID" ]] || { echo "Repository variable MODRINTH_PROJECT_ID is not configured." >&2; exit 1; }
+          [[ -n "$MODRINTH_TOKEN" ]] || { echo "Repository secret MODRINTH_TOKEN is not configured." >&2; exit 1; }
+
+      - name: Checkout release source
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Validate release metadata
+        id: metadata
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          INPUT_VERSION: ${{ inputs.release_version }}
+          INPUT_CHANNEL: ${{ inputs.channel }}
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" == "release" ]]; then
+            [[ "$RELEASE_TAG" =~ ^v([0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?)$ ]] || {
+              echo "Release tag must be vMAJOR.MINOR.PATCH (optionally followed by a prerelease suffix)." >&2
+              exit 1
+            }
+            version="${BASH_REMATCH[1]}"
+            channel="$( [[ "$version" == *-* ]] && echo beta || echo release )"
+          else
+            [[ "$INPUT_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]] || {
+              echo "Version must be MAJOR.MINOR.PATCH (optionally followed by a prerelease suffix)." >&2
+              exit 1
+            }
+            version="$INPUT_VERSION"
+            channel="$INPUT_CHANNEL"
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "channel=$channel" >> "$GITHUB_OUTPUT"
+          echo "ARTIFACT_VERSION=$version" >> "$GITHUB_ENV"
+
+      - name: Build the 1.21.1 NeoForge artifact
+        run: ./gradlew :1.21.1-neoforge:build --no-daemon
+
+      - name: Select the distributable JAR
+        id: artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          jars=(versions/1.21.1-neoforge/build/libs/Mantle-1.21.1-*.jar)
+          distributable=()
+          for jar in "${jars[@]}"; do
+            [[ "$jar" == *-sources.jar ]] || distributable+=("$jar")
+          done
+          if [[ "${#distributable[@]}" -ne 1 ]]; then
+            echo "Expected exactly one distributable Mantle JAR; found ${#distributable[@]}." >&2
+            exit 1
+          fi
+          echo "path=${distributable[0]}" >> "$GITHUB_OUTPUT"
+
+      - name: Synchronize project README and icon
+        env:
+          MODRINTH_PROJECT_ID: ${{ vars.MODRINTH_PROJECT_ID }}
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+        run: python3 .github/scripts/sync_modrinth_metadata.py
+
+      - name: Publish version
+        uses: Kira-NT/mc-publish@v3.3.1
+        with:
+          modrinth-id: ${{ vars.MODRINTH_PROJECT_ID }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          modrinth-name: Mantle Unofficial ${{ steps.metadata.outputs.version }} for Minecraft 1.21.1 (NeoForge)
+          modrinth-version: ${{ steps.metadata.outputs.version }}+mc1.21.1
+          modrinth-version-type: ${{ steps.metadata.outputs.channel }}
+          modrinth-loaders: neoforge
+          modrinth-game-versions: "1.21.1"
+          modrinth-environment: client | server
+          modrinth-files: ${{ steps.artifact.outputs.path }}

@@ -1,17 +1,19 @@
 <p align="center">
-  <img src="docs/assets/banner.svg" alt="Mantle — shared library for Slime Knights mods, Minecraft 1.21.1 on NeoForge" width="100%">
+  <img src="https://raw.githubusercontent.com/DrakesCraft-Labs/Mantle-Unofficial/1.21.X/docs/assets/banner.svg" alt="Mantle Unofficial — shared library for Slime Knights mods, Minecraft 1.21.1 on NeoForge" width="100%">
 </p>
 
 # Mantle (Unofficial 1.21.X)
+
+[![Build](https://github.com/DrakesCraft-Labs/Mantle-Unofficial/actions/workflows/ci.yml/badge.svg?branch=1.21.X)](https://github.com/DrakesCraft-Labs/Mantle-Unofficial/actions/workflows/ci.yml)
 
 Shared code for Slime Knights mods. This is an **unofficial fork** that ports Mantle from
 Minecraft 1.20.1 / Forge to **Minecraft 1.21.1 / NeoForge**. It is not affiliated with or
 endorsed by Slime Knights.
 
 > **Status: working.** The mod compiles, builds a jar, and loads — data generation runs to
-> completion against NeoForge 21.1.77. See [Port status](../../wiki/Port-Status).
+> completion against NeoForge 21.1.77. See [Port status](https://github.com/DrakesCraft-Labs/Mantle-Unofficial/wiki/Port-Status).
 
-📖 **Wiki:** [English](../../wiki) · [Español](../../wiki/Inicio)
+📖 **Wiki:** [English](https://github.com/DrakesCraft-Labs/Mantle-Unofficial/wiki) · [Español](https://github.com/DrakesCraft-Labs/Mantle-Unofficial/wiki/Inicio)
 
 ---
 
@@ -28,7 +30,7 @@ node named `<mcVersion>-<loader>`, and adding a version means declaring a node r
 the source.
 
 <p align="center">
-  <img src="docs/assets/build-pipeline.svg" alt="Build architecture: a single source tree feeds the Stonecutter controller, which drives one node per Minecraft version, each producing a jar" width="100%">
+  <img src="https://raw.githubusercontent.com/DrakesCraft-Labs/Mantle-Unofficial/1.21.X/docs/assets/build-pipeline.svg" alt="Build architecture: a single source tree feeds the Stonecutter controller, which drives one node per Minecraft version, each producing a jar" width="100%">
 </p>
 
 This forced a toolchain move: Stonecutter 0.9.8 refuses to apply on anything below **Gradle 9**,

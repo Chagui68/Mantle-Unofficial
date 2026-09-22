@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Mantle Unofficial</title>
+  <desc id="desc">Layered stone and teal diamond emblem for the Mantle 1.21.x NeoForge port.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#202a31"/>
+      <stop offset="1" stop-color="#101519"/>
+    </linearGradient>
+    <linearGradient id="top" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#76d8ba"/>
+      <stop offset="1" stop-color="#36a9bb"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="url(#background)"/>
+  <path d="M256 66 424 162 256 258 88 162Z" fill="url(#top)"/>
+  <path d="M88 203 256 299 424 203 424 254 256 350 88 254Z" fill="#35c39a"/>
+  <path d="M88 296 256 392 424 296 424 347 256 443 88 347Z" fill="#287f91"/>
+  <path d="m256 112 86 50-86 49-86-49z" fill="#e7f4ef" opacity=".9"/>
+  <path d="m256 211 168-49v51l-168 96z" fill="#195b6c" opacity=".38"/>
+  <path d="m256 307 168-53v51l-168 96z" fill="#154858" opacity=".42"/>
+</svg>
