@@ -72,18 +72,22 @@ public class SafeClientAccess {
     /** Gets the client player instance */
     @Nullable
     public static Player getClientPlayer() {
-      return Minecraft.getInstance().player;
+      // the instance is null during datagen, which runs on the client dist
+      Minecraft mc = Minecraft.getInstance();
+      return mc != null ? mc.player : null;
     }
 
     /** Gets the client level instance */
     @Nullable
     public static Level getClientLevel() {
-      return Minecraft.getInstance().level;
+      Minecraft mc = Minecraft.getInstance();
+      return mc != null ? mc.level : null;
     }
 
     /** Checks if its advanced tooltips */
     public static boolean isAdvancedTooltip() {
-      return Minecraft.getInstance().options.advancedItemTooltips;
+      Minecraft mc = Minecraft.getInstance();
+      return mc != null && mc.options.advancedItemTooltips;
     }
   }
 }

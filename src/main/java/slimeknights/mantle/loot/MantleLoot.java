@@ -71,8 +71,9 @@ public class MantleLoot {
     } else if (key == Registries.LOOT_CONDITION_TYPE) {
       BLOCK_TAG_CONDITION = Registry.register(BuiltInRegistries.LOOT_CONDITION_TYPE, Mantle.getResource("block_tag"), new LootItemConditionType(BlockTagLootCondition.CODEC));
       HAS_CONTEXT_SET = Registry.register(BuiltInRegistries.LOOT_CONDITION_TYPE, Mantle.getResource("has_context_set"), new LootItemConditionType(HasLootContextSetCondition.CODEC));
-      // TAG_EMPTY migrated
-      // TAG_FILLED migrated
+      // these two double as recipe conditions, but they still need a loot type as they are used in loot modifiers
+      TAG_EMPTY = Registry.register(BuiltInRegistries.LOOT_CONDITION_TYPE, slimeknights.mantle.recipe.condition.TagEmptyCondition.ID, new LootItemConditionType(slimeknights.mantle.recipe.condition.TagEmptyCondition.CODEC));
+      TAG_FILLED = Registry.register(BuiltInRegistries.LOOT_CONDITION_TYPE, slimeknights.mantle.recipe.condition.TagFilledCondition.ID, new LootItemConditionType(slimeknights.mantle.recipe.condition.TagFilledCondition.CODEC));
 
     } else if (key == Registries.LOOT_POOL_ENTRY_TYPE) {
       TAG_PREFERENCE = Registry.register(BuiltInRegistries.LOOT_POOL_ENTRY_TYPE, Mantle.getResource("tag_preference"), new LootPoolEntryType(TagPreferenceLootEntry.CODEC));

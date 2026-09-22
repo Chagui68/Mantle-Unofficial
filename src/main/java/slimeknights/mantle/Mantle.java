@@ -143,6 +143,9 @@ public class Mantle {
       event.register(net.neoforged.neoforge.registries.NeoForgeRegistries.Keys.INGREDIENT_TYPES, FluidContainerIngredient.ID, () -> FluidContainerIngredient.TYPE);
       event.register(net.neoforged.neoforge.registries.NeoForgeRegistries.Keys.INGREDIENT_TYPES, getResource("potion"), () -> PotionIngredient.SERIALIZER);
       event.register(net.neoforged.neoforge.registries.NeoForgeRegistries.Keys.INGREDIENT_TYPES, getResource("potion_display"), () -> PotionDisplayIngredient.SERIALIZER);
+      // datagen only ingredients, but the type must exist as the generated recipes reference it
+      event.register(net.neoforged.neoforge.registries.NeoForgeRegistries.Keys.INGREDIENT_TYPES, getResource("item_name"), () -> slimeknights.mantle.recipe.data.ItemNameIngredient.TYPE);
+      event.register(net.neoforged.neoforge.registries.NeoForgeRegistries.Keys.INGREDIENT_TYPES, getResource("nbt_name"), () -> slimeknights.mantle.recipe.data.NBTNameIngredient.TYPE);
     } else if (key == Registries.RECIPE_SERIALIZER) {
       // fluid container transfer
       FluidContainerTransferManager.TRANSFER_LOADERS.registerDeserializer(EmptyFluidContainerTransfer.ID, EmptyFluidContainerTransfer.DESERIALIZER);

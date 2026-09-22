@@ -60,7 +60,7 @@ public interface TypedMap {
     @Nullable
     @Override
     public <R, K extends R> R getOrDefault(Key<K> key, @Nullable R defaultValue) {
-      return null;
+      return defaultValue;
     }
 
     @Override

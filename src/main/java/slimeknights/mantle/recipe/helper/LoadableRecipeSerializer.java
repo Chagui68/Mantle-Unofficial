@@ -26,6 +26,7 @@ import slimeknights.mantle.data.loadable.record.RecordLoadable;
 import slimeknights.mantle.util.typed.TypedMap;
 import slimeknights.mantle.util.typed.TypedMapBuilder;
 
+import javax.annotation.Nullable;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -46,6 +47,9 @@ public class LoadableRecipeSerializer<T extends Recipe<?>> implements LoggingRec
   protected final RecordLoadable<T> loadable;
   protected final MapCodec<T> codec;
   protected final StreamCodec<RegistryFriendlyByteBuf, T> streamCodec;
+  /** Context passed to the loadable, built lazily as the recipe type is not available during construction */
+  @Nullable
+  private TypedMap context;
 
   protected LoadableRecipeSerializer(RecordLoadable<T> loadable) {
     this.loadable = loadable;
@@ -70,7 +74,7 @@ public class LoadableRecipeSerializer<T extends Recipe<?>> implements LoggingRec
         try {
           Dynamic<O> dyn = new Dynamic<>(ops, ops.createMap(input.entries()));
           JsonElement elem = dyn.convert(JsonOps.INSTANCE).getValue();
-          return DataResult.success(loadable.deserialize(elem.getAsJsonObject(), TypedMap.EMPTY));
+          return DataResult.success(loadable.deserialize(elem.getAsJsonObject(), context()));
         } catch (Exception e) {
           return DataResult.error(e::getMessage);
         }
@@ -83,7 +87,7 @@ public class LoadableRecipeSerializer<T extends Recipe<?>> implements LoggingRec
     };
     this.streamCodec = StreamCodec.of(
       (buf, val) -> loadable.encode(buf, val),
-      buf -> loadable.decode(buf, TypedMap.EMPTY)
+      buf -> loadable.decode(buf, context())
     );
   }
 
@@ -100,6 +104,19 @@ public class LoadableRecipeSerializer<T extends Recipe<?>> implements LoggingRec
   /** Creates a serializer that is deprecated, logging a warning when used */
   public static <T extends Recipe<?>> RecipeSerializer<T> deprecated(RecordLoadable<T> loadable, String replacement) {
     return new Deprecated<>(loadable, replacement);
+  }
+
+  /** Gets the context for this serializer, containing the serializer itself so loadables can request it */
+  protected TypedMap context() {
+    if (context == null) {
+      context = buildContext(TypedMapBuilder.builder().put(SERIALIZER, this)).build();
+    }
+    return context;
+  }
+
+  /** Adds any serializer specific keys to the context */
+  protected TypedMapBuilder buildContext(TypedMapBuilder builder) {
+    return builder;
   }
 
   @Override
@@ -122,6 +139,11 @@ public class LoadableRecipeSerializer<T extends Recipe<?>> implements LoggingRec
     @Override
     public RecipeType<?> getType() {
       return type.get();
+    }
+
+    @Override
+    protected TypedMapBuilder buildContext(TypedMapBuilder builder) {
+      return builder.put(TYPED_SERIALIZER, this).put(TYPE, getType());
     }
   }
 

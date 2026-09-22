@@ -6,7 +6,7 @@ license="GPL-3.0-only"
 
 [[mods]]
     modId="mantle"
-    version="1.0.0 - 1.21.1"
+    version="${version}"
     displayName="Mantle"
     authors="Chagui68"
     logoFile="Mantle.png"
