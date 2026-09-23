@@ -26,6 +26,7 @@ stonecutter {
         // Loader axis is NeoForge only: ForgeGradle 6.0.54 rejects Gradle 9+, which
         // Stonecutter 0.9.8 requires, so MinecraftForge cannot share this build.
         match("1.21.1", "neoforge")
+        match("1.21.11", "neoforge")
 
         vcsVersion = "1.21.1-neoforge"
     }

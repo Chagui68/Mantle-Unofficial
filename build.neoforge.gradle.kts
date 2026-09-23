@@ -67,7 +67,9 @@ neoForge {
     version = property("deps.neoforge") as String
 
     // Mantle's access transformer. Required for the GUI/model internals it touches.
-    val at = rootProject.file("src/main/resources/META-INF/accesstransformer.cfg")
+    val atVersion = rootProject.file("src/main/resources/META-INF/accesstransformer-$mcVersion.cfg")
+    val atDefault = rootProject.file("src/main/resources/META-INF/accesstransformer.cfg")
+    val at = if (atVersion.exists()) atVersion else atDefault
     if (at.exists()) {
         accessTransformers.from(at)
         validateAccessTransformers = true
@@ -91,6 +93,18 @@ neoForge {
     }
 }
 
+tasks.named("stonecutterGenerate") {
+    doLast {
+        val atVersion = rootProject.file("src/main/resources/META-INF/accesstransformer-$mcVersion.cfg")
+        if (atVersion.exists()) {
+            val targetAt = layout.buildDirectory.file("generated/stonecutter/main/resources/META-INF/accesstransformer.cfg").get().asFile
+            if (targetAt.parentFile.exists()) {
+                atVersion.copyTo(targetAt, overwrite = true)
+            }
+        }
+    }
+}
+
 tasks.named("createMinecraftArtifacts") {
     dependsOn(tasks.named("stonecutterGenerate"))
 }
@@ -107,6 +121,14 @@ tasks.named<ProcessResources>("processResources") {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     inputs.properties(modsTomlProperties)
     filesMatching(listOf("META-INF/neoforge.mods.toml")) { expand(modsTomlProperties) }
+    val atVersion = rootProject.file("src/main/resources/META-INF/accesstransformer-$mcVersion.cfg")
+    if (atVersion.exists()) {
+        from(atVersion) {
+            into("META-INF")
+            rename { "accesstransformer.cfg" }
+        }
+    }
+    exclude("META-INF/accesstransformer-*.cfg")
 }
 
 tasks.named<Jar>("jar") {
@@ -130,7 +152,10 @@ java { withSourcesJar() }
 
 publishing {
     publications {
-        register<MavenPublication>("mavenJava") { from(components["java"]) }
+        register<MavenPublication>("mavenJava") {
+            artifactId = "Mantle"
+            from(components["java"])
+        }
     }
 }
 
@@ -138,4 +163,7 @@ publishing {
 sourceSets.named("main") {
     resources.srcDir(rootProject.file("src/generated/resources"))
     resources.exclude(".cache")
+    if (rootProject.file("src/main/resources/META-INF/accesstransformer-$mcVersion.cfg").exists()) {
+        resources.exclude("META-INF/accesstransformer.cfg")
+    }
 }
