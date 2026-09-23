@@ -8,7 +8,7 @@ GitHub Release o al ejecutar manualmente el workflow.
 
 1. Crear en Modrinth un proyecto de tipo **Mod** con un título que lo identifique
    claramente como un port no oficial, por ejemplo **Mantle Unofficial — 1.21.1
-   NeoForge**. Mantener la nota de no afiliación y atribución MIT del README.
+   NeoForge**. Mantener la nota de no afiliación y la atribución GPL-3.0 del README.
 2. En GitHub → Settings → Secrets and variables → Actions, añadir la variable
    `MODRINTH_PROJECT_ID` con el ID del proyecto.
 3. Añadir el secreto `MODRINTH_TOKEN`. Crear el token desde la cuenta dueña del
